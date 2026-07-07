@@ -10,6 +10,7 @@ export const mockJobs = [
     salary: "$180,000 - $240,000",
     postedAt: "2 days ago",
     experience: "Senior / Staff",
+    featured: true,
     description: "We are seeking a Lead AI Research Scientist to spearhead our next-generation LLM alignment and agentic workflow efforts. You will lead research in post-training, reinforcement learning, and custom reasoning models.",
     tags: ["LLMs", "Reinforcement Learning", "PyTorch", "NLP"],
     requirements: [
@@ -62,6 +63,7 @@ export const mockJobs = [
     salary: "$160,000 - $210,000",
     postedAt: "Just now",
     experience: "Mid-Senior",
+    featured: true,
     description: "Synthetica is looking for a Systems Engineer to optimize inference engines and deployment pipelines for custom diffusion and transformer models. You'll ensure sub-100ms latencies at global scale.",
     tags: ["CUDA", "C++", "Triton", "Model Optimization"],
     requirements: [

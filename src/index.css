@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  
+  --color-brand-50: #f4f6fe;
+  --color-brand-100: #e9edfd;
+  --color-brand-200: #d6defb;
+  --color-brand-300: #b5c4f8;
+  --color-brand-400: #8da1f3;
+  --color-brand-500: #637bec;
+  --color-brand-600: #465ce2;
+  --color-brand-700: #3547cd;
+  --color-brand-800: #2f3aaa;
+  --color-brand-900: #2b3487;
+  --color-brand-950: #1d2153;
+  
+  --color-dark-bg: #0b0f19;
+  --color-dark-card: #151b2c;
+  --color-dark-border: #222b44;
+}
+
+/* Custom Base Scrollbar and Smooth Transitions */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-800 dark:bg-dark-bg dark:text-slate-100 transition-colors duration-300 antialiased;
+  }
+}
+
+/* Glassmorphism utility card styling */
+.glass-panel {
+  @apply bg-white/70 dark:bg-dark-card/70 backdrop-blur-md border border-slate-200/50 dark:border-dark-border/50 shadow-sm;
+}
+
+.glass-panel-hover {
+  @apply transition-all duration-300 hover:shadow-md hover:border-slate-300/80 dark:hover:border-slate-700/85 hover:-translate-y-0.5;
+}

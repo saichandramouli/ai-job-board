@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, ArrowRight, Cpu, Server, Bot, Eye, Sparkles, Filter, Briefcase } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Cpu, Server, Bot, Eye, Sparkles, Filter, Briefcase, X } from 'lucide-react';
 import { mockJobs } from '../data/mockJobs';
 import JobCard from '../components/JobCard';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -38,15 +38,20 @@ export default function Home() {
     }
   };
 
-  // Filter logic for jobs
-  const featuredJobs = mockJobs.filter(j => j.featured);
-  const latestJobs = mockJobs.filter(j => {
-    const matchesSearch = j.title.toLowerCase().includes(search.toLowerCase()) || 
+  // Filter helper
+  const filterJob = (j) => {
+    const matchesSearch = !search || 
+                          j.title.toLowerCase().includes(search.toLowerCase()) || 
                           j.company.toLowerCase().includes(search.toLowerCase()) ||
                           j.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
-    const matchesLoc = j.location.toLowerCase().includes(locationFilter.toLowerCase());
+    const matchesLoc = !locationFilter || 
+                        j.location.toLowerCase().includes(locationFilter.toLowerCase());
     return matchesSearch && matchesLoc;
-  });
+  };
+
+  // Filter logic for jobs
+  const featuredJobs = mockJobs.filter(j => j.featured && filterJob(j));
+  const latestJobs = mockJobs.filter(j => filterJob(j));
 
   return (
     <div className="flex-1 bg-slate-50/30 dark:bg-dark-bg/10 pb-20">
@@ -107,6 +112,14 @@ export default function Home() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+                {search && (
+                  <button 
+                    onClick={() => setSearch('')}
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center w-full md:w-60 px-3 py-2 md:py-0">
@@ -118,6 +131,14 @@ export default function Home() {
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
                 />
+                {locationFilter && (
+                  <button 
+                    onClick={() => setLocationFilter('')}
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
 
               <button className="rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-7 py-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm shadow-brand-500/10">
@@ -235,6 +256,15 @@ export default function Home() {
             <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light">
               We couldn't find any job match for your current query. Try adjusting filters or search term.
             </p>
+            <button
+              onClick={() => {
+                setSearch('');
+                setLocationFilter('');
+              }}
+              className="mt-6 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer"
+            >
+              Reset Search Filters
+            </button>
           </div>
         ) : (
           <motion.div 

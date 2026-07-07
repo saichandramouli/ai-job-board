@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Search, MapPin, DollarSign, Calendar, ArrowRight, Bookmark, 
-  Cpu, Server, Bot, Eye, Sparkles, Filter, Briefcase
-} from 'lucide-react';
+import { Search, MapPin, ArrowRight, Cpu, Server, Bot, Eye, Sparkles, Filter, Briefcase } from 'lucide-react';
 import { mockJobs } from '../data/mockJobs';
+import JobCard from '../components/JobCard';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // Popular categories list with icons
 const categories = [
@@ -26,15 +24,19 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-};
-
 export default function Home() {
   const [search, setSearch] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [bookmarks, setBookmarks] = useLocalStorage('bookmarks', []);
+
+  // Toggle bookmark callback
+  const handleBookmarkToggle = (id) => {
+    if (bookmarks.includes(id)) {
+      setBookmarks(bookmarks.filter(bId => bId !== id));
+    } else {
+      setBookmarks([...bookmarks, id]);
+    }
+  };
 
   // Filter logic for jobs
   const featuredJobs = mockJobs.filter(j => j.featured);
@@ -150,7 +152,6 @@ export default function Home() {
             return (
               <motion.div
                 key={cat.id}
-                variants={itemVariants}
                 onClick={() => setSearch(cat.name.split(' ')[0])}
                 className="glass-panel glass-panel-hover rounded-2xl p-6 cursor-pointer flex items-center gap-4 group"
               >
@@ -195,64 +196,13 @@ export default function Home() {
           viewport={{ once: true, margin: '-50px' }}
         >
           {featuredJobs.map((job) => (
-            <motion.div
+            <JobCard
               key={job.id}
-              variants={itemVariants}
-              className="glass-panel glass-panel-hover rounded-3xl p-8 relative overflow-hidden border-brand-200/50 dark:border-brand-900/30 bg-gradient-to-tr from-white via-white to-brand-50/20 dark:from-dark-card dark:via-dark-card dark:to-brand-950/10"
-            >
-              {/* Featured Badge */}
-              <div className="absolute top-4 right-4 bg-brand-600 text-white text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full">
-                Featured
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl shadow-md ${job.logoBg}`}>
-                  {job.logo}
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white">
-                    {job.title}
-                  </h3>
-                  <p className="text-sm text-brand-600 dark:text-brand-400 font-semibold mt-0.5">
-                    {job.company}
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-6 text-sm text-slate-500 dark:text-slate-400 line-clamp-2 font-light leading-relaxed">
-                {job.description}
-              </p>
-
-              {/* Meta information tags */}
-              <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                  {job.location}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <DollarSign className="h-3.5 w-3.5 text-slate-400" />
-                  {job.salary}
-                </span>
-              </div>
-
-              {/* Tags & Action row */}
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {job.tags.slice(0, 2).map((t, idx) => (
-                    <span key={idx} className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  to={`/jobs/${job.id}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-                >
-                  Apply Role
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </motion.div>
+              job={job}
+              isFeatured={true}
+              isBookmarked={bookmarks.includes(job.id)}
+              onBookmarkToggle={handleBookmarkToggle}
+            />
           ))}
         </motion.div>
       </section>
@@ -295,72 +245,12 @@ export default function Home() {
             viewport={{ once: true, margin: '-50px' }}
           >
             {latestJobs.map((job) => (
-              <motion.div
+              <JobCard
                 key={job.id}
-                variants={itemVariants}
-                className="glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer"
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl font-bold shadow-sm ${job.logoBg}`}>
-                    {job.logo}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white leading-snug">
-                        {job.title}
-                      </h3>
-                      <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-850 px-2.5 py-0.5 text-xs font-semibold text-slate-800 dark:text-slate-300">
-                        {job.type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-brand-600 dark:text-brand-400 font-semibold mt-0.5">
-                      {job.company}
-                    </p>
-
-                    <div className="mt-3.5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {job.location}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-3.5 w-3.5" />
-                        {job.salary}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {job.postedAt}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tags and Action */}
-                <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end justify-between md:justify-center gap-4 border-t border-slate-100 dark:border-slate-800/50 pt-4 md:border-none md:pt-0">
-                  <div className="flex flex-wrap gap-1.5">
-                    {job.tags.slice(0, 3).map((tag, idx) => (
-                      <span key={idx} className="rounded-md bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-400">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <button 
-                      className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 dark:border-dark-border dark:hover:bg-slate-800 text-slate-400 hover:text-slate-500 transition-colors cursor-pointer"
-                      title="Bookmark Role"
-                    >
-                      <Bookmark className="h-4 w-4" />
-                    </button>
-                    <Link
-                      to={`/jobs/${job.id}`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 text-brand-600 dark:text-brand-400 px-4 py-2 text-sm font-semibold transition-all"
-                    >
-                      Details
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
+                job={job}
+                isBookmarked={bookmarks.includes(job.id)}
+                onBookmarkToggle={handleBookmarkToggle}
+              />
             ))}
           </motion.div>
         )}

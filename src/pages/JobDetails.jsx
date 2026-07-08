@@ -9,9 +9,14 @@ import { mockJobs } from '../data/mockJobs';
 import JobCard from '../components/JobCard';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export default function JobDetails() {
+const pageVariants = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -15, transition: { duration: 0.3 } }
+};
+
+export default function JobDetails({ bookmarks, setBookmarks }) {
   const { id } = useParams();
-  const [bookmarks, setBookmarks] = useLocalStorage('bookmarks', []);
   const [applied, setApplied] = useState(false);
 
   // Find job, default to first job if not found
@@ -46,7 +51,13 @@ export default function JobDetails() {
   }
 
   return (
-    <div className="flex-1 bg-slate-50/50 dark:bg-dark-bg/20 py-10 px-4 sm:px-6 lg:px-8">
+    <motion.div 
+      className="flex-1 bg-slate-50/50 dark:bg-dark-bg/20 py-10 px-4 sm:px-6 lg:px-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <div className="mx-auto max-w-5xl">
         
         {/* Back Link */}
@@ -343,6 +354,6 @@ export default function JobDetails() {
         </div>
 
       </div>
-    </div>
+    </motion.div>
   );
 }

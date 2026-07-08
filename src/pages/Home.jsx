@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, MapPin, ArrowRight, Cpu, Server, Bot, Eye, Sparkles, 
@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { mockJobs } from '../data/mockJobs';
 import JobCard from '../components/JobCard';
+import JobCardSkeleton from '../components/JobCardSkeleton';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // Popular categories list with icons
@@ -26,6 +27,12 @@ const containerVariants = {
   },
 };
 
+const pageVariants = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -15, transition: { duration: 0.3 } }
+};
+
 // Helper to parse minimum yearly salary
 const getMinSalary = (salaryStr) => {
   if (!salaryStr) return 0;
@@ -33,7 +40,7 @@ const getMinSalary = (salaryStr) => {
     const match = salaryStr.match(/\$(\d+)/);
     if (match) {
       const hourly = parseInt(match[1], 10);
-      return hourly * 2000; // roughly $240k yearly for $120/hr
+      return hourly * 2000;
     }
   }
   const match = salaryStr.replace(/,/g, '').match(/\$(\d+)/);
@@ -48,10 +55,9 @@ const getLocationStrategy = (locationStr) => {
   return 'onsite';
 };
 
-export default function Home() {
+export default function Home({ bookmarks, setBookmarks }) {
   const [search, setSearch] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
-  const [bookmarks, setBookmarks] = useLocalStorage('bookmarks', []);
   
   // Advanced Filter states
   const [selectedStrategies, setSelectedStrategies] = useState([]);
@@ -59,6 +65,23 @@ export default function Home() {
   const [selectedExperience, setSelectedExperience] = useState([]);
   const [minSalary, setMinSalary] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulated initial load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 850);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Simulate sub-filter loading for premium feel
+  const triggerSubLoading = () => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 450);
+  };
 
   // Toggle bookmark callback
   const handleBookmarkToggle = (id) => {
@@ -71,6 +94,7 @@ export default function Home() {
 
   // Toggle filter helper
   const handleFilterToggle = (value, list, setList) => {
+    triggerSubLoading();
     if (list.includes(value)) {
       setList(list.filter(v => v !== value));
     } else {
@@ -80,6 +104,7 @@ export default function Home() {
 
   // Reset all filters
   const handleResetAll = () => {
+    triggerSubLoading();
     setSearch('');
     setLocationFilter('');
     setSelectedStrategies([]);
@@ -99,29 +124,23 @@ export default function Home() {
 
   // Filter helper
   const filterJob = (j) => {
-    // 1. Search text matching (title, company, tags)
     const matchesSearch = !search || 
                           j.title.toLowerCase().includes(search.toLowerCase()) || 
                           j.company.toLowerCase().includes(search.toLowerCase()) ||
                           j.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
 
-    // 2. Location string matching
     const matchesLoc = !locationFilter || 
                         j.location.toLowerCase().includes(locationFilter.toLowerCase());
 
-    // 3. Workplace strategy matching
     const strategy = getLocationStrategy(j.location);
     const matchesStrategy = selectedStrategies.length === 0 || selectedStrategies.includes(strategy);
 
-    // 4. Job type matching
     const matchesType = selectedTypes.length === 0 || selectedTypes.includes(j.type);
 
-    // 5. Experience matching
     const matchesExperience = selectedExperience.length === 0 || selectedExperience.some(exp => 
       j.experience.toLowerCase().includes(exp.toLowerCase())
     );
 
-    // 6. Salary threshold matching
     const jobMinSalary = getMinSalary(j.salary);
     const matchesSalary = minSalary === 0 || jobMinSalary >= minSalary;
 
@@ -143,7 +162,7 @@ export default function Home() {
         {hasActiveFilters && (
           <button 
             onClick={handleResetAll}
-            className="text-xs font-semibold text-brand-600 hover:text-brand-500 cursor-pointer"
+            className="text-xs font-semibold text-brand-600 hover:text-brand-500 cursor-pointer transition-colors"
           >
             Clear All
           </button>
@@ -152,10 +171,10 @@ export default function Home() {
 
       {/* Workplace Strategy */}
       <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-3">
           Workplace Strategy
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {['Remote', 'Hybrid', 'Onsite'].map((strategy) => {
             const val = strategy.toLowerCase();
             const checked = selectedStrategies.includes(val);
@@ -165,7 +184,7 @@ export default function Home() {
                   type="checkbox"
                   checked={checked}
                   onChange={() => handleFilterToggle(val, selectedStrategies, setSelectedStrategies)}
-                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer transition-colors"
                 />
                 <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                   {strategy}
@@ -178,10 +197,10 @@ export default function Home() {
 
       {/* Job Type */}
       <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-3">
           Job Type
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {['Full-time', 'Contract'].map((type) => {
             const checked = selectedTypes.includes(type);
             return (
@@ -190,7 +209,7 @@ export default function Home() {
                   type="checkbox"
                   checked={checked}
                   onChange={() => handleFilterToggle(type, selectedTypes, setSelectedTypes)}
-                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer transition-colors"
                 />
                 <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                   {type}
@@ -203,10 +222,10 @@ export default function Home() {
 
       {/* Experience Level */}
       <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-3">
           Experience Level
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {['Senior', 'Staff', 'Mid'].map((exp) => {
             const checked = selectedExperience.includes(exp);
             return (
@@ -215,7 +234,7 @@ export default function Home() {
                   type="checkbox"
                   checked={checked}
                   onChange={() => handleFilterToggle(exp, selectedExperience, setSelectedExperience)}
-                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer transition-colors"
                 />
                 <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                   {exp} {exp === 'Senior' ? '& Above' : ''}
@@ -228,10 +247,10 @@ export default function Home() {
 
       {/* Salary Range */}
       <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-3">
           Minimum Salary (Yearly)
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {[0, 120000, 150000, 180000].map((val) => {
             const labelStr = val === 0 ? 'Any Salary' : `$${(val / 1000)}k+`;
             return (
@@ -240,8 +259,11 @@ export default function Home() {
                   type="radio"
                   name="salary"
                   checked={minSalary === val}
-                  onChange={() => setMinSalary(val)}
-                  className="border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                  onChange={() => {
+                    triggerSubLoading();
+                    setMinSalary(val);
+                  }}
+                  className="border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer transition-colors"
                 />
                 <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                   {labelStr}
@@ -255,8 +277,13 @@ export default function Home() {
   );
 
   return (
-    <div className="flex-1 bg-slate-50/30 dark:bg-dark-bg/10 pb-20">
-      
+    <motion.div 
+      className="flex-1 bg-slate-50/30 dark:bg-dark-bg/10 pb-20"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-brand-500/10 via-transparent to-transparent">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl -z-10" />
@@ -268,7 +295,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
           >
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 dark:bg-brand-950/40 px-4 py-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 mb-6 border border-brand-200/30 dark:border-brand-800/30">
-              <Sparkles className="h-3 w-3" />
+              <Sparkles className="h-3 w-3 animate-pulse" />
               The AI & Systems Job Engine
             </span>
           </motion.div>
@@ -309,11 +336,17 @@ export default function Home() {
                   placeholder="Role, skills (e.g. PyTorch, CUDA, RAG)..."
                   className="w-full bg-transparent text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    triggerSubLoading();
+                    setSearch(e.target.value);
+                  }}
                 />
                 {search && (
                   <button 
-                    onClick={() => setSearch('')}
+                    onClick={() => {
+                      triggerSubLoading();
+                      setSearch('');
+                    }}
                     className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
                     <X className="h-4 w-4" />
@@ -328,11 +361,17 @@ export default function Home() {
                   placeholder="Location or 'Remote'..."
                   className="w-full bg-transparent text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none"
                   value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
+                  onChange={(e) => {
+                    triggerSubLoading();
+                    setLocationFilter(e.target.value);
+                  }}
                 />
                 {locationFilter && (
                   <button 
-                    onClick={() => setLocationFilter('')}
+                    onClick={() => {
+                      triggerSubLoading();
+                      setLocationFilter('');
+                    }}
                     className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
                     <X className="h-4 w-4" />
@@ -355,7 +394,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
             Popular Specializations
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-light">
             Explore dedicated hubs for specific machine learning sub-fields.
           </p>
         </div>
@@ -372,10 +411,13 @@ export default function Home() {
             return (
               <motion.div
                 key={cat.id}
-                onClick={() => setSearch(cat.name.split(' ')[0])}
+                onClick={() => {
+                  triggerSubLoading();
+                  setSearch(cat.name.split(' ')[0]);
+                }}
                 className="glass-panel glass-panel-hover rounded-2xl p-6 cursor-pointer flex items-center gap-4 group"
               >
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${cat.color}`}>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${cat.color}`}>
                   <Icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -399,7 +441,7 @@ export default function Home() {
         <div className="flex lg:hidden items-center justify-between mb-6">
           <button
             onClick={() => setShowMobileFilters(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm dark:border-dark-border dark:bg-dark-card dark:text-slate-200 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm dark:border-dark-border dark:bg-dark-card dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
             <Filter className="h-4 w-4" />
             Filters & Parameters
@@ -408,7 +450,7 @@ export default function Home() {
           {hasActiveFilters && (
             <button 
               onClick={handleResetAll}
-              className="text-xs font-bold text-rose-500 hover:text-rose-600"
+              className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
             >
               Reset Filters
             </button>
@@ -425,86 +467,98 @@ export default function Home() {
           {/* Jobs Listing Stack (middle & right columns) */}
           <div className="lg:col-span-3 space-y-12">
             
-            {/* Featured Jobs Section */}
-            {featuredJobs.length > 0 && (
-              <div>
-                <div className="flex items-end justify-between mb-6">
+            {isLoading ? (
+              /* Loading Skeletons stack view */
+              <div className="space-y-4">
+                <div className="h-5 w-40 rounded bg-slate-200 dark:bg-slate-800 animate-pulse mb-6" />
+                <JobCardSkeleton />
+                <JobCardSkeleton />
+                <JobCardSkeleton />
+              </div>
+            ) : (
+              <>
+                {/* Featured Jobs Section */}
+                {featuredJobs.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
-                      Featured Opportunities
-                    </h2>
+                    <div className="flex items-end justify-between mb-6">
+                      <div>
+                        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
+                          Featured Opportunities
+                        </h2>
+                      </div>
+                      <span className="text-xs text-slate-450 dark:text-slate-500 uppercase tracking-widest font-semibold">
+                        {featuredJobs.length} roles found
+                      </span>
+                    </div>
+
+                    <motion.div 
+                      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      key={`featured-${featuredJobs.length}`}
+                    >
+                      {featuredJobs.map((job) => (
+                        <JobCard
+                          key={job.id}
+                          job={job}
+                          isFeatured={true}
+                          isBookmarked={bookmarks.includes(job.id)}
+                          onBookmarkToggle={handleBookmarkToggle}
+                        />
+                      ))}
+                    </motion.div>
                   </div>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold">
-                    {featuredJobs.length} roles found
-                  </span>
-                </div>
+                )}
 
-                <motion.div 
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  key={`featured-${featuredJobs.length}`}
-                >
-                  {featuredJobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      isFeatured={true}
-                      isBookmarked={bookmarks.includes(job.id)}
-                      onBookmarkToggle={handleBookmarkToggle}
-                    />
-                  ))}
-                </motion.div>
-              </div>
-            )}
-
-            {/* Latest Jobs Section */}
-            <div>
-              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6 flex items-center justify-between">
+                {/* Latest Jobs Section */}
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
-                    Latest Openings
-                  </h2>
-                </div>
-                <div className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
-                  {latestJobs.length} matches found
-                </div>
-              </div>
+                  <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
+                        Latest Openings
+                      </h2>
+                    </div>
+                    <div className="text-xs text-slate-450 dark:text-slate-500 font-semibold">
+                      {latestJobs.length} matches found
+                    </div>
+                  </div>
 
-              {latestJobs.length === 0 ? (
-                <div className="glass-panel rounded-3xl p-12 text-center">
-                  <Briefcase className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No jobs found</h3>
-                  <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light">
-                    We couldn't find any job matches for your current filters. Try resetting them.
-                  </p>
-                  <button
-                    onClick={handleResetAll}
-                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer"
-                  >
-                    Reset Filters
-                  </button>
+                  {latestJobs.length === 0 ? (
+                    <div className="glass-panel rounded-3xl p-12 text-center border-dashed border-2 border-slate-200 dark:border-slate-800">
+                      <Briefcase className="mx-auto h-12 w-12 text-slate-355 dark:text-slate-600 mb-4" />
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white font-display">No matches found</h3>
+                      <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light leading-relaxed">
+                        We couldn't find any job listings matching your query. Try clearing filters to explore all roles.
+                      </p>
+                      <button
+                        onClick={handleResetAll}
+                        className="mt-6 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-semibold transition-colors duration-205 cursor-pointer shadow-md shadow-brand-550/10"
+                      >
+                        Reset Filters
+                      </button>
+                    </div>
+                  ) : (
+                    <motion.div 
+                      className="space-y-4"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      key={`latest-${latestJobs.length}`}
+                    >
+                      {latestJobs.map((job) => (
+                        <JobCard
+                          key={job.id}
+                          job={job}
+                          isBookmarked={bookmarks.includes(job.id)}
+                          onBookmarkToggle={handleBookmarkToggle}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
-              ) : (
-                <motion.div 
-                  className="space-y-4"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  key={`latest-${latestJobs.length}`}
-                >
-                  {latestJobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      isBookmarked={bookmarks.includes(job.id)}
-                      onBookmarkToggle={handleBookmarkToggle}
-                    />
-                  ))}
-                </motion.div>
-              )}
-            </div>
+              </>
+            )}
 
           </div>
         </div>
@@ -535,7 +589,7 @@ export default function Home() {
                 <span className="font-display font-bold text-lg dark:text-white">Filters</span>
                 <button 
                   onClick={() => setShowMobileFilters(false)}
-                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-850 dark:text-slate-400"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -546,7 +600,7 @@ export default function Home() {
               <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => setShowMobileFilters(false)}
-                  className="w-full rounded-xl bg-brand-600 hover:bg-brand-500 text-white py-3 text-sm font-semibold transition-colors"
+                  className="w-full rounded-xl bg-brand-600 hover:bg-brand-500 text-white py-3 text-sm font-semibold transition-colors cursor-pointer"
                 >
                   Apply & Close
                 </button>
@@ -556,6 +610,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-    </div>
+    </motion.div>
   );
 }

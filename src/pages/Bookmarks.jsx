@@ -1,13 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Bookmark, Sparkles, ArrowRight } from 'lucide-react';
 import { mockJobs } from '../data/mockJobs';
 import JobCard from '../components/JobCard';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export default function Bookmarks() {
-  const [bookmarks, setBookmarks] = useLocalStorage('bookmarks', []);
+const pageVariants = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -15, transition: { duration: 0.3 } }
+};
 
+export default function Bookmarks({ bookmarks, setBookmarks }) {
   // Fetch real saved jobs from mockJobs database
   const savedJobs = mockJobs.filter((job) => bookmarks.includes(job.id));
 
@@ -16,14 +20,20 @@ export default function Bookmarks() {
   };
 
   return (
-    <div className="flex-1 bg-slate-50/50 dark:bg-dark-bg/20 py-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+    <motion.div 
+      className="flex-1 bg-slate-50/50 dark:bg-dark-bg/20 py-16 px-4 sm:px-6 lg:px-8 min-h-screen"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <div className="mx-auto max-w-4xl">
         <div className="border-b border-slate-200 dark:border-slate-800 pb-6 mb-8 flex items-center justify-between">
           <div>
             <h1 className="font-display font-bold text-3xl text-slate-900 dark:text-white">
               Your Bookmarked Jobs
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-light">
               Track and review positions you have saved for application.
             </p>
           </div>
@@ -33,17 +43,21 @@ export default function Bookmarks() {
         </div>
 
         {savedJobs.length === 0 ? (
-          <div className="glass-panel rounded-3xl p-12 text-center">
-            <Bookmark className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
+          /* Premium Empty State */
+          <div className="glass-panel rounded-3xl p-12 text-center border-dashed border-2 border-slate-200 dark:border-slate-800">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 mb-6">
+              <Bookmark className="h-6 w-6" />
+            </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white font-display">No saved jobs</h3>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light">
-              Explore open positions and click the bookmark button to save them here.
+            <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light leading-relaxed">
+              Explore open positions in our listing engine and click the bookmark icon on any job card to save them here for quick application.
             </p>
             <Link 
               to="/" 
-              className="mt-6 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer"
+              className="mt-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer shadow-md shadow-brand-500/10 hover:shadow-brand-500/20"
             >
               Browse Jobs
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         ) : (
@@ -59,6 +73,6 @@ export default function Bookmarks() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -60,11 +60,6 @@ export default function Footer() {
                 <ul className="mt-4 space-y-2">
                   <li>
                     <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-400">
-                      Post a Position
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-400">
                       Pricing Plans
                     </a>
                   </li>

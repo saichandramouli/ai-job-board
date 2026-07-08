@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Briefcase, Bookmark, Sparkles, Menu, X } from 'lucide-react';
+import { Briefcase, Bookmark, Sparkles, Menu, X, Sun, Moon } from 'lucide-react';
 
-export default function Navbar({ bookmarkCount = 0 }) {
+export default function Navbar({ bookmarkCount = 0, theme = 'light', setTheme }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -54,6 +54,14 @@ export default function Navbar({ bookmarkCount = 0 }) {
               )}
             </Link>
             
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-905 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-all cursor-pointer"
+              title="Toggle Color Theme"
+            >
+              {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+            </button>
+
             <span className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
 
             <button 
@@ -107,6 +115,18 @@ export default function Navbar({ bookmarkCount = 0 }) {
               </span>
             )}
           </Link>
+          
+          <button
+            onClick={() => {
+              setTheme(theme === 'dark' ? 'light' : 'dark');
+              setIsOpen(false);
+            }}
+            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
+
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               onClick={() => setIsOpen(false)}

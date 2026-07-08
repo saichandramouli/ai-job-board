@@ -10,12 +10,22 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 
 function App() {
   const [bookmarks, setBookmarks] = useLocalStorage('bookmarks', []);
+  const [theme, setTheme] = useLocalStorage('theme', 'light');
+
+  React.useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   return (
     <Router>
       <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-dark-bg text-slate-800 dark:text-slate-100 transition-colors duration-300">
         {/* Navbar */}
-        <Navbar bookmarkCount={bookmarks.length} />
+        <Navbar bookmarkCount={bookmarks.length} theme={theme} setTheme={setTheme} />
 
         {/* Main content route views */}
         <main className="flex flex-1 flex-col">

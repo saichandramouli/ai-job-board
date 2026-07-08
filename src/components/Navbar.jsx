@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Briefcase, Bookmark, Sparkles, Menu, X } from 'lucide-react';
 
-export default function Navbar() {
+export default function Navbar({ bookmarkCount = 0 }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -47,6 +47,11 @@ export default function Navbar() {
             >
               <Bookmark className="h-4 w-4" />
               Bookmarks
+              {bookmarkCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-brand-600 text-white text-[10px] font-bold">
+                  {bookmarkCount}
+                </span>
+              )}
             </Link>
             
             <span className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
@@ -96,6 +101,11 @@ export default function Navbar() {
           >
             <Bookmark className="h-5 w-5" />
             Bookmarks
+            {bookmarkCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-brand-600 text-white text-[10px] font-bold inline-flex items-center justify-center">
+                {bookmarkCount}
+              </span>
+            )}
           </Link>
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <button

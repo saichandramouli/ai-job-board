@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, MapPin, ArrowRight, Cpu, Server, Bot, Eye, Sparkles, Filter, Briefcase, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, MapPin, ArrowRight, Cpu, Server, Bot, Eye, Sparkles, 
+  Filter, Briefcase, X, SlidersHorizontal, DollarSign, Calendar
+} from 'lucide-react';
 import { mockJobs } from '../data/mockJobs';
 import JobCard from '../components/JobCard';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -13,7 +16,6 @@ const categories = [
   { id: 'vision', name: 'Computer Vision', count: 64, icon: Eye, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30' },
 ];
 
-// Motion animation variations
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -24,10 +26,39 @@ const containerVariants = {
   },
 };
 
+// Helper to parse minimum yearly salary
+const getMinSalary = (salaryStr) => {
+  if (!salaryStr) return 0;
+  if (salaryStr.includes('/ hr')) {
+    const match = salaryStr.match(/\$(\d+)/);
+    if (match) {
+      const hourly = parseInt(match[1], 10);
+      return hourly * 2000; // roughly $240k yearly for $120/hr
+    }
+  }
+  const match = salaryStr.replace(/,/g, '').match(/\$(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+// Helper to parse location strategy
+const getLocationStrategy = (locationStr) => {
+  const lower = locationStr.toLowerCase();
+  if (lower.includes('remote')) return 'remote';
+  if (lower.includes('hybrid')) return 'hybrid';
+  return 'onsite';
+};
+
 export default function Home() {
   const [search, setSearch] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [bookmarks, setBookmarks] = useLocalStorage('bookmarks', []);
+  
+  // Advanced Filter states
+  const [selectedStrategies, setSelectedStrategies] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedExperience, setSelectedExperience] = useState([]);
+  const [minSalary, setMinSalary] = useState(0);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Toggle bookmark callback
   const handleBookmarkToggle = (id) => {
@@ -38,29 +69,197 @@ export default function Home() {
     }
   };
 
+  // Toggle filter helper
+  const handleFilterToggle = (value, list, setList) => {
+    if (list.includes(value)) {
+      setList(list.filter(v => v !== value));
+    } else {
+      setList([...list, value]);
+    }
+  };
+
+  // Reset all filters
+  const handleResetAll = () => {
+    setSearch('');
+    setLocationFilter('');
+    setSelectedStrategies([]);
+    setSelectedTypes([]);
+    setSelectedExperience([]);
+    setMinSalary(0);
+  };
+
+  // Check if any advanced filters are active
+  const hasActiveFilters = 
+    search || 
+    locationFilter || 
+    selectedStrategies.length > 0 || 
+    selectedTypes.length > 0 || 
+    selectedExperience.length > 0 || 
+    minSalary > 0;
+
   // Filter helper
   const filterJob = (j) => {
+    // 1. Search text matching (title, company, tags)
     const matchesSearch = !search || 
                           j.title.toLowerCase().includes(search.toLowerCase()) || 
                           j.company.toLowerCase().includes(search.toLowerCase()) ||
                           j.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
+
+    // 2. Location string matching
     const matchesLoc = !locationFilter || 
                         j.location.toLowerCase().includes(locationFilter.toLowerCase());
-    return matchesSearch && matchesLoc;
+
+    // 3. Workplace strategy matching
+    const strategy = getLocationStrategy(j.location);
+    const matchesStrategy = selectedStrategies.length === 0 || selectedStrategies.includes(strategy);
+
+    // 4. Job type matching
+    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(j.type);
+
+    // 5. Experience matching
+    const matchesExperience = selectedExperience.length === 0 || selectedExperience.some(exp => 
+      j.experience.toLowerCase().includes(exp.toLowerCase())
+    );
+
+    // 6. Salary threshold matching
+    const jobMinSalary = getMinSalary(j.salary);
+    const matchesSalary = minSalary === 0 || jobMinSalary >= minSalary;
+
+    return matchesSearch && matchesLoc && matchesStrategy && matchesType && matchesExperience && matchesSalary;
   };
 
   // Filter logic for jobs
   const featuredJobs = mockJobs.filter(j => j.featured && filterJob(j));
   const latestJobs = mockJobs.filter(j => filterJob(j));
 
+  // Shared filters sidebar content
+  const FiltersSidebar = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800/80">
+        <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+          Filter Positions
+        </h3>
+        {hasActiveFilters && (
+          <button 
+            onClick={handleResetAll}
+            className="text-xs font-semibold text-brand-600 hover:text-brand-500 cursor-pointer"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
+
+      {/* Workplace Strategy */}
+      <div>
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+          Workplace Strategy
+        </h4>
+        <div className="space-y-2">
+          {['Remote', 'Hybrid', 'Onsite'].map((strategy) => {
+            const val = strategy.toLowerCase();
+            const checked = selectedStrategies.includes(val);
+            return (
+              <label key={strategy} className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-350 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => handleFilterToggle(val, selectedStrategies, setSelectedStrategies)}
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                />
+                <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                  {strategy}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Job Type */}
+      <div>
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+          Job Type
+        </h4>
+        <div className="space-y-2">
+          {['Full-time', 'Contract'].map((type) => {
+            const checked = selectedTypes.includes(type);
+            return (
+              <label key={type} className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-350 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => handleFilterToggle(type, selectedTypes, setSelectedTypes)}
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                />
+                <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                  {type}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Experience Level */}
+      <div>
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+          Experience Level
+        </h4>
+        <div className="space-y-2">
+          {['Senior', 'Staff', 'Mid'].map((exp) => {
+            const checked = selectedExperience.includes(exp);
+            return (
+              <label key={exp} className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-350 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => handleFilterToggle(exp, selectedExperience, setSelectedExperience)}
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                />
+                <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                  {exp} {exp === 'Senior' ? '& Above' : ''}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Salary Range */}
+      <div>
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+          Minimum Salary (Yearly)
+        </h4>
+        <div className="space-y-2">
+          {[0, 120000, 150000, 180000].map((val) => {
+            const labelStr = val === 0 ? 'Any Salary' : `$${(val / 1000)}k+`;
+            return (
+              <label key={val} className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-350 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="salary"
+                  checked={minSalary === val}
+                  onChange={() => setMinSalary(val)}
+                  className="border-slate-300 text-brand-600 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-900 h-4.5 w-4.5 cursor-pointer"
+                />
+                <span className="group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                  {labelStr}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex-1 bg-slate-50/30 dark:bg-dark-bg/10 pb-20">
       
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-brand-500/10 via-transparent to-transparent">
-        {/* Background glow effects */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl -z-10" />
-        <div className="absolute top-1/3 right-10 w-72 h-72 bg-indigo-500/5 dark:bg-indigo-500/5 rounded-full blur-3xl -z-10" />
         
         <div className="mx-auto max-w-7xl text-center">
           <motion.div
@@ -193,98 +392,170 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Featured Jobs Section */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-20">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
-              Featured Opportunities
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Top-tier roles offering industry-leading compensation and packages.
-            </p>
-          </div>
-          <span className="hidden sm:inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400 font-semibold uppercase tracking-wider">
-            Verified Labs Only
-          </span>
-        </div>
-
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-50px' }}
-        >
-          {featuredJobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              isFeatured={true}
-              isBookmarked={bookmarks.includes(job.id)}
-              onBookmarkToggle={handleBookmarkToggle}
-            />
-          ))}
-        </motion.div>
-      </section>
-
-      {/* Latest Jobs Section */}
-      <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="border-b border-slate-200 dark:border-slate-800/80 pb-6 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
-              Latest Listings
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Freshly indexed postings for AI engineers and developers.
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-dark-card shadow-sm">
-              <Filter className="h-3.5 w-3.5" />
-              Sort: Recent
-            </span>
-          </div>
-        </div>
-
-        {/* Latest jobs stack list */}
-        {latestJobs.length === 0 ? (
-          <div className="glass-panel rounded-3xl p-12 text-center">
-            <Briefcase className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No jobs found</h3>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light">
-              We couldn't find any job match for your current query. Try adjusting filters or search term.
-            </p>
-            <button
-              onClick={() => {
-                setSearch('');
-                setLocationFilter('');
-              }}
-              className="mt-6 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer"
-            >
-              Reset Search Filters
-            </button>
-          </div>
-        ) : (
-          <motion.div 
-            className="space-y-4"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
+      {/* Main Jobs & Filters Grid */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Toggle Filters bar on Mobile viewports */}
+        <div className="flex lg:hidden items-center justify-between mb-6">
+          <button
+            onClick={() => setShowMobileFilters(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm dark:border-dark-border dark:bg-dark-card dark:text-slate-200 cursor-pointer"
           >
-            {latestJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                isBookmarked={bookmarks.includes(job.id)}
-                onBookmarkToggle={handleBookmarkToggle}
-              />
-            ))}
-          </motion.div>
-        )}
+            <Filter className="h-4 w-4" />
+            Filters & Parameters
+          </button>
+
+          {hasActiveFilters && (
+            <button 
+              onClick={handleResetAll}
+              className="text-xs font-bold text-rose-500 hover:text-rose-600"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+          
+          {/* Desktop Filters Sidebar (pinned left) */}
+          <div className="hidden lg:block lg:col-span-1 glass-panel rounded-3xl p-6 sticky top-20">
+            <FiltersSidebar />
+          </div>
+
+          {/* Jobs Listing Stack (middle & right columns) */}
+          <div className="lg:col-span-3 space-y-12">
+            
+            {/* Featured Jobs Section */}
+            {featuredJobs.length > 0 && (
+              <div>
+                <div className="flex items-end justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
+                      Featured Opportunities
+                    </h2>
+                  </div>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold">
+                    {featuredJobs.length} roles found
+                  </span>
+                </div>
+
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  key={`featured-${featuredJobs.length}`}
+                >
+                  {featuredJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isFeatured={true}
+                      isBookmarked={bookmarks.includes(job.id)}
+                      onBookmarkToggle={handleBookmarkToggle}
+                    />
+                  ))}
+                </motion.div>
+              </div>
+            )}
+
+            {/* Latest Jobs Section */}
+            <div>
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
+                    Latest Openings
+                  </h2>
+                </div>
+                <div className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
+                  {latestJobs.length} matches found
+                </div>
+              </div>
+
+              {latestJobs.length === 0 ? (
+                <div className="glass-panel rounded-3xl p-12 text-center">
+                  <Briefcase className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No jobs found</h3>
+                  <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto text-sm font-light">
+                    We couldn't find any job matches for your current filters. Try resetting them.
+                  </p>
+                  <button
+                    onClick={handleResetAll}
+                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <motion.div 
+                  className="space-y-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  key={`latest-${latestJobs.length}`}
+                >
+                  {latestJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isBookmarked={bookmarks.includes(job.id)}
+                      onBookmarkToggle={handleBookmarkToggle}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </div>
+
+          </div>
+        </div>
       </section>
+
+      {/* Mobile Drawer Slide-over Filter Panel */}
+      <AnimatePresence>
+        {showMobileFilters && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileFilters(false)}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs"
+            />
+
+            {/* Slide-over panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-xs bg-white dark:bg-dark-card p-6 shadow-2xl overflow-y-auto border-l border-slate-200 dark:border-slate-800"
+            >
+              <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <span className="font-display font-bold text-lg dark:text-white">Filters</span>
+                <button 
+                  onClick={() => setShowMobileFilters(false)}
+                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <FiltersSidebar />
+
+              <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className="w-full rounded-xl bg-brand-600 hover:bg-brand-500 text-white py-3 text-sm font-semibold transition-colors"
+                >
+                  Apply & Close
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

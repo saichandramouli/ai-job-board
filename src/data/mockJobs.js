@@ -12,12 +12,19 @@ export const mockJobs = [
     experience: "Senior / Staff",
     featured: true,
     description: "We are seeking a Lead AI Research Scientist to spearhead our next-generation LLM alignment and agentic workflow efforts. You will lead research in post-training, reinforcement learning, and custom reasoning models.",
+    companyDescription: "NeuralFlow Labs is a pioneer in cognitive architectures and decentralized foundation model training, backed by top-tier venture funds.",
     tags: ["LLMs", "Reinforcement Learning", "PyTorch", "NLP"],
     requirements: [
       "Ph.D. in Computer Science, Machine Learning, or related field.",
       "3+ years of experience training and fine-tuning large language models.",
       "First-author publications at top-tier conferences (NeurIPS, ICML, ICLR).",
       "Strong coding skills in Python, PyTorch, and distributed training frameworks."
+    ],
+    responsibilities: [
+      "Design and implement post-training methods (RLHF, DPO, KTO) for our core reasoning models.",
+      "Collaborate with infrastructure engineers to optimize distributed training on large GPU clusters.",
+      "Publish novel research outcomes in top machine learning conferences.",
+      "Mentor junior research scientists and outline multi-agent research directions."
     ],
     benefits: [
       "Competitive equity package + annual performance bonus.",
@@ -38,12 +45,19 @@ export const mockJobs = [
     postedAt: "3 days ago",
     experience: "Senior",
     description: "Join our core product team to design intuitive, state-of-the-art developer consoles and canvas interfaces for multi-agent orchestration tools. You will bridge complex technical capabilities with seamless human experiences.",
+    companyDescription: "Cognitive OS is building the computing interface of the AI era, creating visual orchestration canvasses for multi-agent applications.",
     tags: ["UX/UI", "Product Design", "Figma", "AI Canvas"],
     requirements: [
       "5+ years of experience designing complex developer tools or SaaS web applications.",
       "Strong portfolio showcasing visual design, user research, and interactive prototyping.",
       "Familiarity with AI interfaces, prompt engineering concepts, or node-based canvases.",
       "Excellent communication and collaboration skills."
+    ],
+    responsibilities: [
+      "Translate complex multi-agent execution flows into clear, visual node canvases.",
+      "Conduct user research interviews with developers to refine debugger utilities.",
+      "Collaborate with frontend engineers to build high-fidelity interactive prototypes in React.",
+      "Maintain and expand our core component design system."
     ],
     benefits: [
       "Work from anywhere in North America.",
@@ -65,12 +79,19 @@ export const mockJobs = [
     experience: "Mid-Senior",
     featured: true,
     description: "Synthetica is looking for a Systems Engineer to optimize inference engines and deployment pipelines for custom diffusion and transformer models. You'll ensure sub-100ms latencies at global scale.",
+    companyDescription: "Synthetica is a generative media powerhouse building low-latency API pipelines for real-time video and voice synthesis.",
     tags: ["CUDA", "C++", "Triton", "Model Optimization"],
     requirements: [
       "B.S./M.S. in Computer Engineering, Computer Science, or similar.",
       "Expertise in GPU programming (CUDA) and writing high-performance C++ code.",
       "Experience with TensorRT, Triton Inference Server, or vLLM.",
       "Deep understanding of hardware architectures and memory layouts."
+    ],
+    responsibilities: [
+      "Optimize custom transformer and diffusion kernels using CUDA and Triton.",
+      "Build auto-scaling inference deployment configurations on decentralized compute networks.",
+      "Monitor, profile, and reduce latency bottlenecks across the synthesis pipeline.",
+      "Interface with model developers to support new model architectures on launch day."
     ],
     benefits: [
       "Top-tier compensation and company equity.",
@@ -91,12 +112,19 @@ export const mockJobs = [
     postedAt: "1 week ago",
     experience: "Senior",
     description: "Help our enterprise clients design, implement, and integrate custom AI agent networks using frameworks like LangChain, AutoGen, and CrewAI. You will design reliable workflows to automate complex business pipelines.",
+    companyDescription: "Agentify Corp provides specialized machine learning and automation consultancy services to Fortune 500 enterprises.",
     tags: ["AI Agents", "LangChain", "Python", "Enterprise Integration"],
     requirements: [
       "Track record of deploying AI agents or automation systems in enterprise environments.",
       "Deep proficiency in Python, FastAPI, and vector databases (Pinecone, Chroma).",
       "Ability to interface with enterprise IT, security, and product managers.",
       "Strong consulting and system architecture background."
+    ],
+    responsibilities: [
+      "Audit enterprise business workflows and identify target areas for agentic automation.",
+      "Design and deploy fault-tolerant multi-agent orchestrations using Python.",
+      "Implement robust evaluation benchmarks to ensure agent safety and correctness.",
+      "Train client developer teams on prompt engineering and model fine-tuning best practices."
     ],
     benefits: [
       "Flexible schedule.",
